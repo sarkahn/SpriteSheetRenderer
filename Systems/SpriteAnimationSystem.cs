@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Unity.Burst;
 using Unity.Entities;
 using Unity.Jobs;
 using UnityEngine;
@@ -7,6 +8,7 @@ using UnityEngine;
 [UpdateBefore(typeof(CopyUVCellDataSystem))]
 public class SpriteAnimationSystem : JobComponentSystem {
 
+  [BurstCompile]
   struct AnimationJob : IJobForEach<SpriteSheetAnimation, UVCell> {
     public float dt;
     public void Execute(ref SpriteSheetAnimation anim, ref UVCell cell) {
