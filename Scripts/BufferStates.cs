@@ -12,6 +12,8 @@ public class BufferStates : System.IDisposable
     ComputeBuffer argsBuffer;
     uint[] args;
 
+    Dictionary<SpriteSheetMaterial,ComputeBuffer> uvBuffers_ = new Dictionary<SpriteSheetMaterial, ComputeBuffer>();
+
     /// <summary>
     /// Maps materials (Shared Component Data) to lists of buffers.
     /// </summary>
@@ -29,6 +31,17 @@ public class BufferStates : System.IDisposable
     List<(ComponentType, string, int)> bufferTypes_;
 
     Mesh mesh_;
+
+    void WriteUVs(SpriteSheetMaterial mat)
+    {
+        ComputeBuffer b;
+        if(!uvBuffers_.TryGetValue(mat, out b))
+        {
+            b = CachedUVData.GetUVBuffer(mat.material);
+            mat.material.SetBuffer("uvBuffer", b);
+            uvBuffers_[mat] = b;
+        }
+    }
     
     public BufferStates(List<(ComponentType,string,int)> bufferTypes)
     {
@@ -42,12 +55,17 @@ public class BufferStates : System.IDisposable
 
         args = new uint[5] { 6, 0, 0, 0, 0 };
         argsBuffer = new ComputeBuffer(1, args.Length * sizeof(uint), ComputeBufferType.IndirectArguments);
+
+        //oldBuffers.Enqueue(uvBuffer);
+        //sharedMat.material.SetBuffer("uvBuffer", uvBuffer);
     }
 
     public void Dispose()
     {
         materialBufferMap_.Clear();
         argsBuffer.Dispose();
+        foreach (var buffer in uvBuffers_)
+            buffer.Value.Dispose();
     }
 
     public BufferState GetState(SpriteSheetMaterial key, int index)
@@ -68,7 +86,8 @@ public class BufferStates : System.IDisposable
             args[1] = (uint)count;
             argsBuffer.SetData(args);
         }
-        
+        WriteUVs(key);
+
         var bounds = new Bounds(Vector3.zero, Vector3.one * 5000);
         Graphics.DrawMeshInstancedIndirect(mesh_, 0, key.material, bounds, argsBuffer);
     }

@@ -14,12 +14,12 @@ using Unity.Burst;
 public abstract class RenderBufferSystem<BufferDataT> : JobComponentSystem
   where BufferDataT : struct, IBufferElementData
 {
-    static List<SpriteSheetMaterial> sharedMaterials = new List<SpriteSheetMaterial>();
+    static List<SpriteSheetMaterial> sharedMaterials_ = new List<SpriteSheetMaterial>();
 
     EndSimulationEntityCommandBufferSystem initBufferSystem_;
 
-    EntityQuery uninitializedBuffers;
-    EntityQuery initializedBuffers;
+    EntityQuery uninitializedBuffers_;
+    EntityQuery initializedBuffers_;
 
     /// <summary>
     /// Derived classes should schedule a job to populate the buffer.
@@ -41,20 +41,24 @@ public abstract class RenderBufferSystem<BufferDataT> : JobComponentSystem
 
     protected override void OnCreate()
     {
-        uninitializedBuffers = GetEntityQuery(
+        uninitializedBuffers_ = GetEntityQuery(
           ComponentType.ReadOnly<RenderBufferTag>(),
           ComponentType.ReadOnly<SpriteSheetMaterial>(),
           ComponentType.Exclude<BufferDataT>());
-        initializedBuffers = GetEntityQuery(
+        uninitializedBuffers_.SetFilterChanged(ComponentType.ReadOnly<SpriteSheetMaterial>());
+
+        initializedBuffers_ = GetEntityQuery(
           ComponentType.ReadOnly<RenderBufferTag>(),
           ComponentType.ReadOnly<SpriteSheetMaterial>(),
           ComponentType.ReadWrite<BufferDataT>());
+        initializedBuffers_.SetFilterChanged(ComponentType.ReadWrite<BufferDataT>());
+
         initBufferSystem_ = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        if (uninitializedBuffers.CalculateLength() > 0)
+        if (uninitializedBuffers_.CalculateLength() > 0)
         {
             inputDeps = new InitializeBuffersJob
             {
@@ -64,18 +68,18 @@ public abstract class RenderBufferSystem<BufferDataT> : JobComponentSystem
             initBufferSystem_.AddJobHandleForProducer(inputDeps);
         }
 
-        if (initializedBuffers.CalculateLength() == 0)
+        if (initializedBuffers_.CalculateLength() == 0)
             return inputDeps;
 
-        sharedMaterials.Clear();
-        EntityManager.GetAllUniqueSharedComponentData(sharedMaterials);
+        sharedMaterials_.Clear();
+        EntityManager.GetAllUniqueSharedComponentData(sharedMaterials_);
         // Ignore default (null material)
-        sharedMaterials.RemoveAt(0);
+        sharedMaterials_.RemoveAt(0);
 
-        foreach (var mat in sharedMaterials)
+        foreach (var mat in sharedMaterials_)
         {
-            initializedBuffers.SetFilter(mat);
-            var bufferEntity = initializedBuffers.GetSingletonEntity();
+            initializedBuffers_.SetFilter(mat);
+            var bufferEntity = initializedBuffers_.GetSingletonEntity();
 
             // Derived classes can fill the buffer here
             inputDeps = PopulateBuffer(bufferEntity, mat, inputDeps);

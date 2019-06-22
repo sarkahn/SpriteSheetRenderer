@@ -50,9 +50,9 @@ public class SpriteRenderSystem : ComponentSystem
     protected override void OnCreate()
     {
         // Add buffers for processing here
-        //AddBufferType<ColorBuffer,float4>( sizeof(float) * 4 );
+        AddBufferType<ColorBuffer,float4>( "colorsBuffer", sizeof(float) * 4 );
         AddBufferType<MatrixBuffer,float4x2>( "transformBuffer", sizeof(float) * 8 );
-        //AddBufferType<UVCellBuffer,int>( sizeof(int) );
+        AddBufferType<UVCellBuffer,int>( "uvCellsBuffer", sizeof(int) );
         
         CreateBufferStates();
     }

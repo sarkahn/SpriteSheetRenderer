@@ -41,9 +41,8 @@ public class CopyMatrixDataSystem : RenderBufferSystem<MatrixBuffer>
         trsQuery = GetEntityQuery(
           ComponentType.ReadOnly<Position2D>(),
           ComponentType.ReadOnly<Rotation2D>(),
-          ComponentType.ReadOnly<Scale>(),
-          ComponentType.ReadOnly<SpriteSheetMaterial>()
-          );
+          ComponentType.ReadOnly<Scale>(), 
+          ComponentType.ReadOnly<SpriteSheetMaterial>());
     }
 
     protected override void OnDestroy()

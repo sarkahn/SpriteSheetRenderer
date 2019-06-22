@@ -29,7 +29,6 @@ public class BufferState : System.IDisposable
             count_ = data.Length;
             Resize();
         }
-        Debug.Log("Writing data " + data[0] + "to buffer");
         buffer_.SetData(data);
         mat.SetBuffer(name_, buffer_);
         return count_;
