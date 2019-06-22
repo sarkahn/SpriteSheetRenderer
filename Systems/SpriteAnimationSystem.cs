@@ -6,35 +6,41 @@ using Unity.Jobs;
 using UnityEngine;
 
 [UpdateBefore(typeof(CopyUVCellDataSystem))]
-public class SpriteAnimationSystem : JobComponentSystem {
+public class SpriteAnimationSystem : JobComponentSystem
+{
 
-  [BurstCompile]
-  struct AnimationJob : IJobForEach<SpriteSheetAnimation, UVCell> {
-    public float dt;
-    public void Execute(ref SpriteSheetAnimation anim, ref UVCell cell) {
-      if (!anim.play)
-        return;
+    [BurstCompile]
+    struct AnimationJob : IJobForEach<SpriteSheetAnimation, UVCell>
+    {
+        public float dt;
+        public void Execute(ref SpriteSheetAnimation anim, ref UVCell cell)
+        {
+            if (!anim.play)
+                return;
 
-      anim.elapsed += dt;
+            anim.elapsed += dt;
 
-      if( anim.elapsed >= anim.fps ) {
-        int min = anim.frameMin;
-        int max = anim.frameMax;
-        int curr = cell.value;
-        int count = max - min;
+            if (anim.elapsed >= anim.fps)
+            {
+                int min = anim.frameMin;
+                int max = anim.frameMax;
+                int curr = cell.value;
+                int count = max - min;
 
-        int i = curr - min;
-        i = (i + 1) % count;
-        cell.value = min + i;
-        anim.elapsed = 0;
-      }
+                int i = curr - min;
+                i = (i + 1) % count;
+                cell.value = min + i;
+                anim.elapsed = 0;
+            }
+        }
     }
-  }
 
-  protected override JobHandle OnUpdate(JobHandle inputDeps) {
-    inputDeps = new AnimationJob {
-      dt = Time.deltaTime,
-    }.Schedule(this, inputDeps);
-    return inputDeps;
-  }
+    protected override JobHandle OnUpdate(JobHandle inputDeps)
+    {
+        inputDeps = new AnimationJob
+        {
+            dt = Time.deltaTime,
+        }.Schedule(this, inputDeps);
+        return inputDeps;
+    }
 }

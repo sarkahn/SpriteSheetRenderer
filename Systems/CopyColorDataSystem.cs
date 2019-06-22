@@ -11,35 +11,40 @@ using UnityEngine;
 /// </summary>
 public class CopyColorDataSystem : RenderBufferSystem<ColorBuffer>
 {
-  EntityQuery sourceColors;
+    EntityQuery sourceColors;
 
-  [BurstCompile]
-  struct CopyColors : IJobForEachWithEntity<SpriteSheetColor> {
-    public Entity bufferEntity;
-    public BufferFromEntity<ColorBuffer> bufferFromEntity;
+    [BurstCompile]
+    struct CopyColors : IJobForEachWithEntity<SpriteSheetColor>
+    {
+        public Entity bufferEntity;
+        public BufferFromEntity<ColorBuffer> bufferFromEntity;
 
-    public void Execute(Entity e, int index, [ReadOnly] ref SpriteSheetColor c0) {
-      var buffer = bufferFromEntity[bufferEntity];
-      buffer[index] = c0.value;
+        public void Execute(Entity e, int index, [ReadOnly] ref SpriteSheetColor c0)
+        {
+            var buffer = bufferFromEntity[bufferEntity];
+            buffer[index] = c0.value;
+        }
     }
-  }
 
-  protected override void OnCreate() {
-    base.OnCreate();
-    sourceColors = GetEntityQuery(ComponentType.ReadOnly<SpriteSheetColor>(), ComponentType.ReadOnly<SpriteSheetMaterial>());
-  }
+    protected override void OnCreate()
+    {
+        base.OnCreate();
+        sourceColors = GetEntityQuery(ComponentType.ReadOnly<SpriteSheetColor>(), ComponentType.ReadOnly<SpriteSheetMaterial>());
+    }
 
-  protected override JobHandle PopulateBuffer(Entity bufferEntity, SpriteSheetMaterial filterMat, JobHandle inputDeps) {
+    protected override JobHandle PopulateBuffer(Entity bufferEntity, SpriteSheetMaterial filterMat, JobHandle inputDeps)
+    {
 
-    sourceColors.SetFilter(filterMat);
+        sourceColors.SetFilter(filterMat);
 
-    EntityManager.GetBuffer<ColorBuffer>(bufferEntity).ResizeUninitialized(sourceColors.CalculateLength());
-    inputDeps = new CopyColors {
-      bufferEntity = bufferEntity,
-      bufferFromEntity = GetBufferFromEntity<ColorBuffer>()
-    }.ScheduleSingle(sourceColors, inputDeps);
+        EntityManager.GetBuffer<ColorBuffer>(bufferEntity).ResizeUninitialized(sourceColors.CalculateLength());
+        inputDeps = new CopyColors
+        {
+            bufferEntity = bufferEntity,
+            bufferFromEntity = GetBufferFromEntity<ColorBuffer>()
+        }.ScheduleSingle(sourceColors, inputDeps);
 
-    return inputDeps;
-  }
+        return inputDeps;
+    }
 
 }

@@ -12,39 +12,46 @@ using UnityEngine;
 /// </summary>
 [UpdateInGroup(typeof(InitializationSystemGroup))]
 [AlwaysUpdateSystem]
-public class GenerateRenderBuffersSystem : ComponentSystem {
-  EntityArchetype bufferArchetype;
-  EntityQuery bufferQuery;
-  
-  static List<SpriteSheetMaterial> sharedMaterials = new List<SpriteSheetMaterial>();
+public class GenerateRenderBuffersSystem : ComponentSystem
+{
+    EntityArchetype bufferArchetype;
+    EntityQuery bufferQuery;
 
-  protected override void OnCreate() {
-    bufferQuery = GetEntityQuery(typeof(RenderBufferTag), typeof(SpriteSheetMaterial));
-    bufferArchetype = EntityManager.CreateArchetype(typeof(RenderBufferTag), typeof(SpriteSheetMaterial));
-  }
+    static List<SpriteSheetMaterial> sharedMaterials = new List<SpriteSheetMaterial>();
 
-  protected override void OnUpdate() {
-    sharedMaterials.Clear();
-    EntityManager.GetAllUniqueSharedComponentData(sharedMaterials);
-    // Ignore default ( null material )
-    sharedMaterials.RemoveAt(0);
-
-    int bufferCount = bufferQuery.CalculateLength();
-
-    NativeArray<Entity> buffers;
-    if( bufferCount != sharedMaterials.Count ) {
-      EntityManager.DestroyEntity(bufferQuery);
-      buffers = new NativeArray<Entity>(sharedMaterials.Count, Allocator.TempJob);
-      EntityManager.CreateEntity(bufferArchetype, buffers);
-    } else {
-      buffers = bufferQuery.ToEntityArray(Allocator.TempJob);
+    protected override void OnCreate()
+    {
+        bufferQuery = GetEntityQuery(typeof(RenderBufferTag), typeof(SpriteSheetMaterial));
+        bufferArchetype = EntityManager.CreateArchetype(typeof(RenderBufferTag), typeof(SpriteSheetMaterial));
     }
 
-    for( int i = 0; i < buffers.Length; ++i ) {
-      var bufferMat = EntityManager.GetSharedComponentData<SpriteSheetMaterial>(buffers[i]);
-      EntityManager.SetSharedComponentData(buffers[i], sharedMaterials[i]);
-    }
+    protected override void OnUpdate()
+    {
+        sharedMaterials.Clear();
+        EntityManager.GetAllUniqueSharedComponentData(sharedMaterials);
+        // Ignore default ( null material )
+        sharedMaterials.RemoveAt(0);
 
-    buffers.Dispose();
-  }
+        int bufferCount = bufferQuery.CalculateLength();
+
+        NativeArray<Entity> buffers;
+        if (bufferCount != sharedMaterials.Count)
+        {
+            EntityManager.DestroyEntity(bufferQuery);
+            buffers = new NativeArray<Entity>(sharedMaterials.Count, Allocator.TempJob);
+            EntityManager.CreateEntity(bufferArchetype, buffers);
+        }
+        else
+        {
+            buffers = bufferQuery.ToEntityArray(Allocator.TempJob);
+        }
+
+        for (int i = 0; i < buffers.Length; ++i)
+        {
+            var bufferMat = EntityManager.GetSharedComponentData<SpriteSheetMaterial>(buffers[i]);
+            EntityManager.SetSharedComponentData(buffers[i], sharedMaterials[i]);
+        }
+
+        buffers.Dispose();
+    }
 }

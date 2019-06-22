@@ -6,5 +6,5 @@ using UnityEngine;
 [System.Serializable]
 public struct UVCell : IComponentData
 {
-  public int value;
+    public int value;
 }
