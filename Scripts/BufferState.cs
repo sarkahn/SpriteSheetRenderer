@@ -6,36 +6,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
-
-//public class ColorBufferState : BufferState, IRenderData<ColorBuffer, NativeArray<float4>>
-//{
-//    public NativeArray<float4> GetRenderDataFromBuffer(DynamicBuffer<ColorBuffer> buffer)
-//        => buffer.Reinterpret<float4>().AsNativeArray();
-//}
-
-//public class MatrixBufferState : BufferState, IRenderData<MatrixBuffer, NativeArray<float4x2>>
-//{
-//    public NativeArray<float4x2> GetRenderDataFromBuffer(DynamicBuffer<MatrixBuffer> buffer)
-//        => buffer.Reinterpret<float4x2>().AsNativeArray();
-//}
-
-//public class UVCellBufferState : BufferState, IRenderData<UVCellBuffer, NativeArray<int>>
-//{
-//    public NativeArray<int> GetRenderDataFromBuffer(DynamicBuffer<UVCellBuffer> buffer)
-//        => buffer.Reinterpret<int>().AsNativeArray();
-//}
-
-///// <summary>
-///// Interface to convert data from an entity dynamic buffer into data we can send 
-///// into a compute buffer.
-///// </summary>
-///// <typeparam name="BufferT">Type of Dynamic Buffer</typeparam>
-///// <typeparam name="DataT">Type of data that will be sent to the compute buffer.</typeparam>
-//public interface IRenderData<BufferT,Data> where BufferT : struct, IBufferElementData
-//{
-//    Data GetRenderDataFromBuffer(DynamicBuffer<BufferT> buffer);
-//}
-
 /// <summary>
 /// Stores compute buffer state to avoid resizing unless necessary.
 /// </summary>
@@ -44,20 +14,25 @@ public class BufferState : System.IDisposable
     int count_ = 0;
     int stride_ = 0;
     ComputeBuffer buffer_;
+    string name_;
     
-    public void Initialize(int stride)
+    public BufferState(string name, int stride)
     {
+        name_ = name;
         stride_ = stride;
     }
 
-    public void Set<T>(NativeArray<T> data) where T : struct
+    public int Set<T>(NativeArray<T> data, Material mat) where T : struct
     {
         if (buffer_ == null || count_ != data.Length)
         {
             count_ = data.Length;
             Resize();
         }
+        Debug.Log("Writing data " + data[0] + "to buffer");
         buffer_.SetData(data);
+        mat.SetBuffer(name_, buffer_);
+        return count_;
     }
 
     void Resize()

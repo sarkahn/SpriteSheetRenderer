@@ -10,11 +10,13 @@ using Unity.Burst;
 /// Base class for systems that want to fill render buffers from
 /// component data.
 /// </summary>
+// I didn't really want to do this but it saves a lot of typing.
 public abstract class RenderBufferSystem<BufferDataT> : JobComponentSystem
   where BufferDataT : struct, IBufferElementData
 {
-
     static List<SpriteSheetMaterial> sharedMaterials = new List<SpriteSheetMaterial>();
+
+    EndSimulationEntityCommandBufferSystem initBufferSystem_;
 
     EntityQuery uninitializedBuffers;
     EntityQuery initializedBuffers;
@@ -26,6 +28,17 @@ public abstract class RenderBufferSystem<BufferDataT> : JobComponentSystem
     /// </summary>
     protected abstract JobHandle PopulateBuffer(Entity bufferEntity, SpriteSheetMaterial filterMat, JobHandle inputDeps);
 
+    //[BurstCompile]
+    struct InitializeBuffersJob : IJobForEachWithEntity<RenderBufferTag>
+    {
+        public EntityCommandBuffer.Concurrent commandBuffer;
+
+        public void Execute(Entity entity, int index, [ReadOnly] ref RenderBufferTag c0)
+        {
+            commandBuffer.AddBuffer<BufferDataT>(index, entity);
+        }
+    }
+
     protected override void OnCreate()
     {
         uninitializedBuffers = GetEntityQuery(
@@ -36,16 +49,19 @@ public abstract class RenderBufferSystem<BufferDataT> : JobComponentSystem
           ComponentType.ReadOnly<RenderBufferTag>(),
           ComponentType.ReadOnly<SpriteSheetMaterial>(),
           ComponentType.ReadWrite<BufferDataT>());
+        initBufferSystem_ = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        // Ensure our buffer entities have their dynamic buffers attached
-        // Buffers are initialized from GenerateRenderBuffersSystem
-        using (var entities = uninitializedBuffers.ToEntityArray(Allocator.TempJob))
+        if (uninitializedBuffers.CalculateLength() > 0)
         {
-            for (int i = 0; i < entities.Length; ++i)
-                EntityManager.AddBuffer<BufferDataT>(entities[i]);
+            inputDeps = new InitializeBuffersJob
+            {
+                commandBuffer = initBufferSystem_.CreateCommandBuffer().ToConcurrent(),
+            }.Schedule(this, inputDeps);
+
+            initBufferSystem_.AddJobHandleForProducer(inputDeps);
         }
 
         if (initializedBuffers.CalculateLength() == 0)

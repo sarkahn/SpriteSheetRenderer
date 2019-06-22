@@ -17,7 +17,8 @@ public class GenerateRenderBuffersSystem : ComponentSystem
     EntityArchetype bufferArchetype;
     EntityQuery bufferQuery;
 
-    static List<SpriteSheetMaterial> sharedMaterials = new List<SpriteSheetMaterial>();
+    HashedMaterials hashedMaterials_ = new HashedMaterials();
+    static List<SpriteSheetMaterial> sharedMaterials_ = new List<SpriteSheetMaterial>();
 
     protected override void OnCreate()
     {
@@ -27,31 +28,32 @@ public class GenerateRenderBuffersSystem : ComponentSystem
 
     protected override void OnUpdate()
     {
-        sharedMaterials.Clear();
-        EntityManager.GetAllUniqueSharedComponentData(sharedMaterials);
+        sharedMaterials_.Clear();
+        EntityManager.GetAllUniqueSharedComponentData(sharedMaterials_);
         // Ignore default ( null material )
-        sharedMaterials.RemoveAt(0);
+        sharedMaterials_.RemoveAt(0);
 
         int bufferCount = bufferQuery.CalculateLength();
 
-        NativeArray<Entity> buffers;
-        if (bufferCount != sharedMaterials.Count)
+        bool changed = hashedMaterials_.ChangedSinceLastFrame(sharedMaterials_);
+
+        if (!changed)
+            return;
+        
+        if ( bufferCount != sharedMaterials_.Count)
         {
             EntityManager.DestroyEntity(bufferQuery);
-            buffers = new NativeArray<Entity>(sharedMaterials.Count, Allocator.TempJob);
-            EntityManager.CreateEntity(bufferArchetype, buffers);
+            for( int i = 0; i < sharedMaterials_.Count; ++i )
+            {
+                EntityManager.CreateEntity(bufferArchetype);
+            }
         }
-        else
         {
-            buffers = bufferQuery.ToEntityArray(Allocator.TempJob);
-        }
-
-        for (int i = 0; i < buffers.Length; ++i)
-        {
-            var bufferMat = EntityManager.GetSharedComponentData<SpriteSheetMaterial>(buffers[i]);
-            EntityManager.SetSharedComponentData(buffers[i], sharedMaterials[i]);
-        }
-
-        buffers.Dispose();
+            int i = 0;
+            Entities.WithAll<RenderBufferTag>().WithAll<SpriteSheetMaterial>().ForEach((Entity e) =>
+            {
+                PostUpdateCommands.SetSharedComponent(e, sharedMaterials_[i++]);
+            });
+        }      
     }
 }

@@ -1,10 +1,11 @@
-﻿using System.Collections;
+﻿
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace ECSSprites.Util
 {
-    public class MultiDictionary<KEY, VALUE> : IEnumerable<(KEY, List<VALUE>)>
+    public class MultiListDictionary<KEY, VALUE> : IEnumerable<(KEY, List<VALUE>)>
     {
         Dictionary<KEY, List<VALUE>> dict_ = new Dictionary<KEY, List<VALUE>>();
 
@@ -12,6 +13,8 @@ namespace ECSSprites.Util
 
         public System.Action<List<VALUE>> onRemove_;
 
+        public List<VALUE> this[KEY k] => dict_[k];
+        
         public void Add(KEY key, VALUE value)
         {
             GetOrCreateValueList(key).Add(value);
@@ -66,8 +69,10 @@ namespace ECSSprites.Util
 
         public void Clear()
         {
-            foreach(var pair in dict_ )
-                Remove(pair.Key);
+            var keys = dict_.Keys;
+            List<KEY> keyList = new List<KEY>(keys);
+            foreach (var key in keyList)
+                Remove(key);
         }
 
         public int KeyCount => dict_.Count;

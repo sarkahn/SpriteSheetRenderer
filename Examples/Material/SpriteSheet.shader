@@ -86,7 +86,7 @@ Shader "Instanced/SpriteSheet" {
 				fixed4 frag(v2f i) : SV_Target{
 					fixed4 col = tex2D(_MainTex, i.uv) * i.color;
 					col.rgb *= col.a;
-
+					col = float4(1, 1, 1, 1);
 					clip(col.a - 1.0 / 255.0);
 					return col;
 				}

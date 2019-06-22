@@ -151,7 +151,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spawnData:
-    spriteCount: 350000
+    spriteCount: 5000
     spawnArea:
       x: 1000
       y: 1000

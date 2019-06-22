@@ -8,72 +8,67 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Profiling;
 
+
 public class SpriteRenderSystem : ComponentSystem
 {
     List<SpriteSheetMaterial> sharedMaterials = new List<SpriteSheetMaterial>();
-
-    Mesh mesh;
-
+    
     /// <summary>
     /// List of buffer queries. When new buffers are needed they should be added via <see cref="AddBuffer{T}"/>
     /// </summary>
-    List<(EntityQuery, ComponentType)> bufferQueries_ = new List<(EntityQuery, ComponentType)>();
+    List<(EntityQuery, System.Func<Entity,BufferState,Material,int>)> bufferQueries_ = 
+        new List<(EntityQuery, System.Func<Entity,BufferState,Material,int>)>();
 
-    void AddBufferQuery<T>() where T : struct, IBufferElementData
+    BufferStates bufferStates;
+
+    List<(ComponentType,string,int)> bufferTypes_ = new List<(ComponentType,string,int)>();
+
+
+    /// <summary>
+    /// Add a buffer type that will be processed for rendering.
+    /// </summary>
+    /// <param name="dataTypeStride">Stride of the data to be passed to the gpu.</param>
+    /// <typeparam name="BufferType">Type of the Dynamic Buffer to be read from.</typeparam>
+    /// <typeparam name="DataType">Type that the buffer data will be reinterpreted as when sent to the GPU.</typeparam>
+    void AddBufferType<BufferType,DataType>(string shaderName, int dataTypeStride) 
+        where BufferType : struct, IBufferElementData where DataType : struct
     {
-        var t = ComponentType.ReadOnly<T>();
+        System.Func<Entity, BufferState,Material,int> cb = (e, s, m) => WriteToBuffer<BufferType, DataType>(e, s, m);
+        var t = ComponentType.ReadOnly<BufferType>();
         var q = GetEntityQuery(t, typeof(SpriteSheetMaterial));
-        bufferQueries_.Add((q, t));
+
+        bufferQueries_.Add((q,cb));
         q.SetFilterChanged(t);
+        bufferTypes_.Add((t,shaderName,dataTypeStride));
+    }
+
+    void CreateBufferStates()
+    {
+        bufferStates = new BufferStates(bufferTypes_);
     }
 
     protected override void OnCreate()
     {
-        GetEntityQuery
         // Add buffers for processing here
-        AddBuffer<ColorBuffer>();
-        AddBuffer<MatrixBuffer>();
-        AddBuffer<UVCellBuffer>();
+        //AddBufferType<ColorBuffer,float4>( sizeof(float) * 4 );
+        AddBufferType<MatrixBuffer,float4x2>( "transformBuffer", sizeof(float) * 8 );
+        //AddBufferType<UVCellBuffer,int>( sizeof(int) );
         
-        args = new uint[5] { 6, 0, 0, 0, 0 };
-        argsBuffer = new ComputeBuffer(1, args.Length * sizeof(uint), ComputeBufferType.IndirectArguments);
-
-
-
-        mesh = MeshExtension.Quad();
+        CreateBufferStates();
     }
 
     protected override void OnDestroy()
     {
         base.OnDestroy();
-        argsBuffer.Dispose();
+        bufferStates.Dispose();
     }
-
-
-
-    void UpdateBuffers()
+    
+    /// Returns the number of instances rendered
+    int WriteToBuffer<BufferType,DataType>(Entity e, BufferState state, Material mat) 
+        where BufferType : struct, IBufferElementData where DataType : struct
     {
-        //foreach( var (mat,buffers) in bufferStates_ )
-        //{
-        //    foreach (var buffer in buffers)
-        //    {
-        //        buffer.Dispose();
-        //    }
-        //}
-    }
-
-    void WriteToBuffers(Entity e, List<BufferState> states)
-    {
-        foreach(var state in states)
-        {
-            WriteToColorBuffer(e, state);
-        }
-    }
-
-    void WriteToColorBuffer(Entity e, BufferState state)
-    {
-        var buffer = EntityManager.GetBuffer<ColorBuffer>(e);
-        state.Set(buffer.Reinterpret<float4>().AsNativeArray());
+        var buffer = EntityManager.GetBuffer<BufferType>(e);
+        return state.Set(buffer.Reinterpret<DataType>().AsNativeArray(), mat);
     }
 
     protected override void OnUpdate()
@@ -82,16 +77,26 @@ public class SpriteRenderSystem : ComponentSystem
         EntityManager.GetAllUniqueSharedComponentData(sharedMaterials);
         sharedMaterials.RemoveAt(0);
 
+        bufferStates.SyncBufferStates(sharedMaterials);
+
         foreach (var sharedMat in sharedMaterials)
         {
-            foreach (var (query, bufferType) in bufferQueries_)
+            int count = 0;
+            for( int i = 0; i < bufferQueries_.Count; ++i )
             {
-                query.SetFilter(sharedMat);
-                int count = query.CalculateLength();
-                if (count == 0)
-                    continue;
+                var (query, fillBufferCallback) = bufferQueries_[i];
 
+                query.SetFilter(sharedMat);
+                
+                if (query.CalculateLength() == 0)
+                    continue;
+                
+                
                 var e = query.GetSingletonEntity();
+                
+                var state = bufferStates.GetState(sharedMat, i);
+                
+                count = fillBufferCallback(e, state, sharedMat.material);
 
                 //List<BufferState> bufferStates;
                 //if (!bufferStates_.TryGetValues(sharedMat, out bufferStates))
@@ -143,6 +148,9 @@ public class SpriteRenderSystem : ComponentSystem
                 //var bounds = new Bounds(Vector3.zero, Vector3.one * 5000);
                 //Graphics.DrawMeshInstancedIndirect(mesh, 0, sharedMat.material, bounds, argsBuffer);
             }
+
+
+            bufferStates.Render(sharedMat, count);
         }
     }
 
