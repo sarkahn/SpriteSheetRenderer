@@ -50,8 +50,7 @@ public abstract class RenderBufferSystem<BufferDataT> : JobComponentSystem
         initializedBuffers_ = GetEntityQuery(
           ComponentType.ReadOnly<RenderBufferTag>(),
           ComponentType.ReadOnly<SpriteSheetMaterial>(),
-          ComponentType.ReadWrite<BufferDataT>());
-        initializedBuffers_.SetFilterChanged(ComponentType.ReadWrite<BufferDataT>());
+          ComponentType.ReadOnly<BufferDataT>());
 
         initBufferSystem_ = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
     }

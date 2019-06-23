@@ -22,8 +22,12 @@ public class GenerateRenderBuffersSystem : ComponentSystem
 
     protected override void OnCreate()
     {
-        bufferQuery = GetEntityQuery(typeof(RenderBufferTag), typeof(SpriteSheetMaterial));
-        bufferArchetype = EntityManager.CreateArchetype(typeof(RenderBufferTag), typeof(SpriteSheetMaterial));
+        var t = new ComponentType[] 
+        {
+            ComponentType.ReadOnly<RenderBufferTag>(),
+            ComponentType.ReadOnly<SpriteSheetMaterial>() };
+        bufferQuery = GetEntityQuery(t);
+        bufferArchetype = EntityManager.CreateArchetype(t);
     }
 
     protected override void OnUpdate()
@@ -34,11 +38,6 @@ public class GenerateRenderBuffersSystem : ComponentSystem
         sharedMaterials_.RemoveAt(0);
 
         int bufferCount = bufferQuery.CalculateLength();
-
-        bool changed = hashedMaterials_.ChangedSinceLastFrame(sharedMaterials_);
-
-        if (!changed)
-            return;
         
         if ( bufferCount != sharedMaterials_.Count)
         {
@@ -50,7 +49,7 @@ public class GenerateRenderBuffersSystem : ComponentSystem
         }
         {
             int i = 0;
-            Entities.WithAll<RenderBufferTag>().WithAll<SpriteSheetMaterial>().ForEach((Entity e) =>
+            Entities.WithAllReadOnly<RenderBufferTag>().WithAllReadOnly<SpriteSheetMaterial>().ForEach((Entity e) =>
             {
                 PostUpdateCommands.SetSharedComponent(e, sharedMaterials_[i++]);
             });

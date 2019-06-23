@@ -30,13 +30,17 @@ public class CopyColorDataSystem : RenderBufferSystem<ColorBuffer>
     {
         base.OnCreate();
         sourceColors = GetEntityQuery(ComponentType.ReadOnly<SpriteSheetColor>(), ComponentType.ReadOnly<SpriteSheetMaterial>());
+        sourceColors.SetFilterChanged(ComponentType.ReadOnly<SpriteSheetColor>());
     }
 
     protected override JobHandle PopulateBuffer(Entity bufferEntity, SpriteSheetMaterial filterMat, JobHandle inputDeps)
     {
-
         sourceColors.SetFilter(filterMat);
 
+        // Doesn't seem to work
+        if (sourceColors.CalculateLength() == 0)
+            return inputDeps;
+        
         EntityManager.GetBuffer<ColorBuffer>(bufferEntity).ResizeUninitialized(sourceColors.CalculateLength());
         inputDeps = new CopyColors
         {

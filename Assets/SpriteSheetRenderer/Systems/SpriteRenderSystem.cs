@@ -22,8 +22,7 @@ public class SpriteRenderSystem : ComponentSystem
     BufferStates bufferStates;
 
     List<(ComponentType,string,int)> bufferTypes_ = new List<(ComponentType,string,int)>();
-
-
+    
     /// <summary>
     /// Add a buffer type that will be processed for rendering.
     /// </summary>
@@ -90,77 +89,15 @@ public class SpriteRenderSystem : ComponentSystem
                 
                 if (query.CalculateLength() == 0)
                     continue;
-                
-                
+
                 var e = query.GetSingletonEntity();
                 
                 var state = bufferStates.GetState(sharedMat, i);
                 
                 count = fillBufferCallback(e, state, sharedMat.material);
-
-                //List<BufferState> bufferStates;
-                //if (!bufferStates_.TryGetValues(sharedMat, out bufferStates))
-                //    continue;
-
-                //WriteToBuffers(bufferStates);
-
-
-                //matricesBufferQ.SetFilter(sharedMat);
-                //colorsBufferQ.SetFilter(sharedMat);
-                //positionsBufferQ.SetFilter(sharedMat);
-
-                //var matrixDataBuffer = EntityManager.GetBuffer<MatrixBuffer>(matricesBufferQ.GetSingletonEntity());
-                //var colorDataBuffer = EntityManager.GetBuffer<ColorBuffer>(colorsBufferQ.GetSingletonEntity());
-                //var uvCellsDataBuffer = EntityManager.GetBuffer<UVCellBuffer>(uvCellsBufferQ.GetSingletonEntity());
-                ////var positionsDatabuffer = EntityManager.GetBuffer<PosBuffer>(positionsBufferQ.GetSingletonEntity());
-
-                ////int instanceCount = positionsDatabuffer.Length;
-                //int instanceCount = matrixDataBuffer.Length;
-
-                //var matrixData = matrixDataBuffer.Reinterpret<float4x2>().AsNativeArray();
-                //var matrixBuffer = GetBuffer(instanceCount, sizeof(float) * 8);
-                //matrixBuffer.SetData(matrixData);
-                //sharedMat.material.SetBuffer("transformBuffer", matrixBuffer);
-
-                //var colorData = colorDataBuffer.Reinterpret<float4>().AsNativeArray();
-                //var colorsBuffer = GetBuffer(instanceCount, sizeof(float) * 4);
-                //colorsBuffer.SetData(colorData);
-                //sharedMat.material.SetBuffer("colorsBuffer", colorsBuffer);
-
-                //var uvCellsData = uvCellsDataBuffer.Reinterpret<int>().AsNativeArray();
-                //var uvCellsBuffer = GetBuffer(instanceCount, sizeof(int));
-                //uvCellsBuffer.SetData(uvCellsData);
-                //sharedMat.material.SetBuffer("uvCellsBuffer", uvCellsBuffer);
-
-                ////var positionsData = positionsDatabuffer.Reinterpret<float2>().AsNativeArray();
-                ////var posBuffer = GetBuffer(instanceCount, sizeof(float) * 2);
-                ////posBuffer.SetData(positionsData);
-                ////sharedMat.material.SetBuffer("positionsBuffer", posBuffer);
-
-                //var uvBuffer = CachedUVData.GetUVBuffer(sharedMat.material);
-                //oldBuffers.Enqueue(uvBuffer);
-                //sharedMat.material.SetBuffer("uvBuffer", uvBuffer);
-
-                //args[1] = (uint)instanceCount;
-                //argsBuffer.SetData(args);
-                //// Note - bounds essentially defines world space according to the drawmesh call
-                //// Meaning the center of the bounds is where it considers (0,0,0)
-                //var bounds = new Bounds(Vector3.zero, Vector3.one * 5000);
-                //Graphics.DrawMeshInstancedIndirect(mesh, 0, sharedMat.material, bounds, argsBuffer);
             }
-
 
             bufferStates.Render(sharedMat, count);
         }
     }
-
-    //void ResizeBuffer<BufferT>(EntityQuery q, int instanceCount, int stride) where BufferT : struct, IBufferElementData
-    //{
-    //    var e = q.GetSingletonEntity();
-    //    var entityBuffer = EntityManager.GetBuffer<BufferT>(e);
-    //    var matrixData = entityBuffer.Reinterpret<float4x2>().AsNativeArray();
-    //    var matrixBuffer = GetBuffer(instanceCount, sizeof(float) * 8);
-    //    matrixBuffer.SetData(matrixData);
-    //    sharedMat.material.SetBuffer("transformBuffer", matrixBuffer);
-    //}
 }

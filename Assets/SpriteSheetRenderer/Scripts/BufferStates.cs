@@ -56,8 +56,6 @@ public class BufferStates : System.IDisposable
         args = new uint[5] { 6, 0, 0, 0, 0 };
         argsBuffer = new ComputeBuffer(1, args.Length * sizeof(uint), ComputeBufferType.IndirectArguments);
 
-        //oldBuffers.Enqueue(uvBuffer);
-        //sharedMat.material.SetBuffer("uvBuffer", uvBuffer);
     }
 
     public void Dispose()
@@ -87,7 +85,7 @@ public class BufferStates : System.IDisposable
             argsBuffer.SetData(args);
         }
         WriteUVs(key);
-
+        
         var bounds = new Bounds(Vector3.zero, Vector3.one * 5000);
         Graphics.DrawMeshInstancedIndirect(mesh_, 0, key.material, bounds, argsBuffer);
     }
@@ -105,6 +103,7 @@ public class BufferStates : System.IDisposable
     /// Syncs the buffer states to the list of shared component data.
     /// Effectively this gives us a list of cached compute buffers (one for each render buffer) for every type
     /// of shared component data. This should work in the case that an active material is added or removed.
+    /// (I haven't tested that though)
     /// </summary>
     /// <param name="keys">List of shared materials</param>
     public void SyncBufferStates(List<SpriteSheetMaterial> keys)
