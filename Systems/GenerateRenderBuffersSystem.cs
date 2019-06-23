@@ -1,71 +1,72 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Unity.Collections;
 using Unity.Entities;
-using Unity.Jobs;
-using UnityEngine;
 using System.Linq;
+using DOTSSpriteRenderer.Components;
+using DOTSSpriteRenderer.RenderBuffers;
 
-/// <summary>
-/// Generates our render buffer entities. We generate one entity
-/// for each material (Shared Component Data). Ensures the render
-/// buffer entities stays in sync with our materials.
-/// </summary>
-[UpdateInGroup(typeof(InitializationSystemGroup))]
-[AlwaysUpdateSystem]
-public class GenerateRenderBuffersSystem : ComponentSystem
+namespace DOTSSpriteRenderer.Systems
 {
-    EntityArchetype bufferArchetype;
-    EntityQuery bufferQuery;
-
-    HashedMaterials hashedMaterials_ = new HashedMaterials();
-    static List<SpriteSheetMaterial> sharedMaterials_ = new List<SpriteSheetMaterial>();
-
-    List<ComponentType> buffersToGenerate_ = new List<ComponentType>();
-
     /// <summary>
-    /// Convenience method for adding buffers to the generation list.
+    /// Generates our render buffer entities. We generate one entity
+    /// for each material (Shared Component Data). Ensures the render
+    /// buffer entities stays in sync with our materials.
     /// </summary>
-    void GenBuffer<T>() where T : struct, IBufferElementData
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [AlwaysUpdateSystem]
+    public class GenerateRenderBuffersSystem : ComponentSystem
     {
-        buffersToGenerate_.Add(ComponentType.ReadOnly<T>());
-    }
+        EntityArchetype bufferArchetype;
+        EntityQuery bufferQuery;
 
-    protected override void OnCreate()
-    {
-        GenBuffer<ColorBuffer>();
-        GenBuffer<PosBuffer>();
-        GenBuffer<ScaleBuffer>();
-        GenBuffer<RotBuffer>();
-        GenBuffer<UVCellBuffer>();
+        static List<SpriteSheetMaterial> sharedMaterials_ = new List<SpriteSheetMaterial>();
 
-        var t = new ComponentType[]
+        List<ComponentType> buffersToGenerate_ = new List<ComponentType>();
+
+        /// <summary>
+        /// Convenience method for adding buffers to the generation list.
+        /// </summary>
+        void GenBuffer<T>() where T : struct, IBufferElementData
         {
-            ComponentType.ReadOnly<RenderBuffer>(),
-            ComponentType.ReadOnly<SpriteSheetMaterial>(),
-        };
-        t = t.Concat(buffersToGenerate_).ToArray();
-        bufferQuery = GetEntityQuery(t);
-        bufferArchetype = EntityManager.CreateArchetype(t);
-    }
+            buffersToGenerate_.Add(ComponentType.ReadOnly<T>());
+        }
 
-    protected override void OnUpdate()
-    {
-        sharedMaterials_.Clear();
-        EntityManager.GetAllUniqueSharedComponentData(sharedMaterials_);
-        // Ignore default ( null material )
-        sharedMaterials_.RemoveAt(0);
-
-        int bufferCount = bufferQuery.CalculateLength();
-        
-        if ( bufferCount != sharedMaterials_.Count)
+        protected override void OnCreate()
         {
-            EntityManager.DestroyEntity(bufferQuery);
-            Debug.Log("Generating buffers");
-            for ( int i = 0; i < sharedMaterials_.Count; ++i )
+            GenBuffer<ColorBuffer>();
+            GenBuffer<PosBuffer>();
+            GenBuffer<ScaleBuffer>();
+            GenBuffer<RotBuffer>();
+            GenBuffer<UVCellBuffer>();
+
+            var t = new ComponentType[]
             {
-                var e = EntityManager.CreateEntity(bufferArchetype);
-                EntityManager.SetSharedComponentData<SpriteSheetMaterial>(e, sharedMaterials_[i]);
+                ComponentType.ReadOnly<RenderBufferTag>(),
+                ComponentType.ReadOnly<SpriteSheetMaterial>(),
+            };
+            t = t.Concat(buffersToGenerate_).ToArray();
+            bufferQuery = GetEntityQuery(t);
+            bufferArchetype = EntityManager.CreateArchetype(t);
+        }
+
+        protected override void OnUpdate()
+        {
+            sharedMaterials_.Clear();
+            EntityManager.GetAllUniqueSharedComponentData(sharedMaterials_);
+            // Ignore default ( null material )
+            sharedMaterials_.RemoveAt(0);
+
+            int bufferCount = bufferQuery.CalculateLength();
+
+            if (bufferCount != sharedMaterials_.Count)
+            {
+                EntityManager.DestroyEntity(bufferQuery);
+                //Debug.Log("Generating buffers");
+                for (int i = 0; i < sharedMaterials_.Count; ++i)
+                {
+                    var e = EntityManager.CreateEntity(bufferArchetype);
+                    EntityManager.SetSharedComponentData<SpriteSheetMaterial>(e, sharedMaterials_[i]);
+                }
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using DOTSSpriteRenderer.Components;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
@@ -7,7 +8,7 @@ using Unity.Transforms;
 using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
-namespace ECSSpriteSheetAnimation.Examples
+namespace DOTSSpriteRenderer.Examples
 {
     public class SpriteSpawnerTest : UnityEngine.MonoBehaviour
     {

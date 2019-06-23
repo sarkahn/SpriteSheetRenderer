@@ -2,15 +2,19 @@
 using Unity.Entities;
 using System;
 
-public struct SpriteSheetMaterial : ISharedComponentData, IEquatable<SpriteSheetMaterial>
+
+namespace DOTSSpriteRenderer.Components
 {
-    public Material material;
-    public bool Equals(SpriteSheetMaterial other)
+    public struct SpriteSheetMaterial : ISharedComponentData, IEquatable<SpriteSheetMaterial>
     {
-        return material == other.material;
-    }
-    public override int GetHashCode()
-    {
-        return material ? material.GetHashCode() : 1371622046;
+        public Material material;
+        public bool Equals(SpriteSheetMaterial other)
+        {
+            return material == other.material;
+        }
+        public override int GetHashCode()
+        {
+            return material ? material.GetHashCode() : 1371622046;
+        }
     }
 }

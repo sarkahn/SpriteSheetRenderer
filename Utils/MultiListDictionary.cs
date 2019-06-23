@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace ECSSprites.Util
+namespace DOTSSpriteRenderer.Utils
 {
     public class MultiListDictionary<KEY, VALUE> : IEnumerable<(KEY, List<VALUE>)>
     {

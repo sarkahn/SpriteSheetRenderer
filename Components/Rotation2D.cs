@@ -1,6 +1,9 @@
 ﻿using Unity.Entities;
 
-public struct Rotation2D : IComponentData
+namespace DOTSSpriteRenderer.Components
 {
-    public float angle;
+    public struct Rotation2D : IComponentData
+    {
+        public float angle;
+    }
 }

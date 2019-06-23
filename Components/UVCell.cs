@@ -3,8 +3,12 @@ using System.Collections.Generic;
 using Unity.Entities;
 using UnityEngine;
 
-[System.Serializable]
-public struct UVCell : IComponentData
+
+namespace DOTSSpriteRenderer.Components
 {
-    public int value;
+    [System.Serializable]
+    public struct UVCell : IComponentData
+    {
+        public int value;
+    }
 }

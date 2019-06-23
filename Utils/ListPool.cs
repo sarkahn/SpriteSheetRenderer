@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace ECSSprites.Util
+namespace DOTSSpriteRenderer.Utils
 {
     public static class ListPool<T>
     {

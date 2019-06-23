@@ -1,8 +1,9 @@
 # SpriteSheetRenderer
 A powerful Unity ECS system to render massive numbers of animated sprites:
-##### 200k entities were rendered at 90 fps on a Mid-2015 MacBook Pro.
-![N|Solid](https://forum.unity.com/proxy.php?image=https%3A%2F%2Fi.imgur.com%2FRBZBBMH.png&hash=0d3b424543bf265d76fb6f1dfec389a7)
+##### 500k entities rendered ~60 fps on a high end windows PC inside the editor. Performance should be massively better in a build.
+![N|Solid](https://forum.unity.com/attachments/w6i9mdhdjj-gif.440414/)
 ### How to use:
+
 * 1- Create the Archetype:
 
 ```sh
@@ -14,8 +15,7 @@ spriteSheetArchetype = entityManager.CreateArchetype(
   typeof(SpriteSheet),
   typeof(SpriteSheetAnimation),
   typeof(SpriteSheetMaterial),
-  typeof(UvBuffer),
-  typeof(RenderData)
+  typeof(UvCell)
 );
 ```
 

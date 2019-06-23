@@ -1,45 +1,49 @@
-﻿using System.Collections;
+﻿using DOTSSpriteRenderer.Components;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Jobs;
 using UnityEngine;
 
-public class SpriteAnimationSystem : JobComponentSystem
+namespace DOTSSpriteRenderer.Systems
 {
-
-    [BurstCompile]
-    struct AnimationJob : IJobForEach<SpriteSheetAnimation, UVCell>
+    public class SpriteAnimationSystem : JobComponentSystem
     {
-        public float dt;
-        public void Execute(ref SpriteSheetAnimation anim, ref UVCell cell)
+
+        [BurstCompile]
+        struct AnimationJob : IJobForEach<SpriteSheetAnimation, UVCell>
         {
-            if (!anim.play)
-                return;
-
-            anim.elapsed += dt;
-
-            if (anim.elapsed >= anim.fps)
+            public float dt;
+            public void Execute(ref SpriteSheetAnimation anim, ref UVCell cell)
             {
-                int min = anim.frameMin;
-                int max = anim.frameMax;
-                int curr = cell.value;
-                int count = max - min;
+                if (!anim.play)
+                    return;
 
-                int i = curr - min;
-                i = (i + 1) % count;
-                cell.value = min + i;
-                anim.elapsed = 0;
+                anim.elapsed += dt;
+
+                if (anim.elapsed >= anim.fps)
+                {
+                    int min = anim.frameMin;
+                    int max = anim.frameMax;
+                    int curr = cell.value;
+                    int count = max - min;
+
+                    int i = curr - min;
+                    i = (i + 1) % count;
+                    cell.value = min + i;
+                    anim.elapsed = 0;
+                }
             }
         }
-    }
 
-    protected override JobHandle OnUpdate(JobHandle inputDeps)
-    {
-        inputDeps = new AnimationJob
+        protected override JobHandle OnUpdate(JobHandle inputDeps)
         {
-            dt = Time.deltaTime,
-        }.Schedule(this, inputDeps);
-        return inputDeps;
+            inputDeps = new AnimationJob
+            {
+                dt = Time.deltaTime,
+            }.Schedule(this, inputDeps);
+            return inputDeps;
+        }
     }
 }
