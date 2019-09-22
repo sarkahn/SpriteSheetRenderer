@@ -56,7 +56,7 @@ namespace DOTSSpriteRenderer.Systems
             // Ignore default ( null material )
             sharedMaterials_.RemoveAt(0);
 
-            int bufferCount = bufferQuery.CalculateLength();
+            int bufferCount = bufferQuery.CalculateEntityCount();
 
             if (bufferCount != sharedMaterials_.Count)
             {

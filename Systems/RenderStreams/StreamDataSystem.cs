@@ -64,7 +64,7 @@ namespace DOTSSpriteRenderer.Systems.RenderStreams
                 buffers_.SetFilter(mat);
                 source_.SetFilter(mat);
 
-                if (buffers_.CalculateLength() == 0)
+                if (buffers_.CalculateEntityCount() == 0)
                     continue;
 
                 Entity e;
@@ -82,7 +82,7 @@ namespace DOTSSpriteRenderer.Systems.RenderStreams
 
                 var bfe = GetBufferFromEntity<BufferType>(false);
 
-                int count = source_.CalculateLength();
+                int count = source_.CalculateEntityCount();
                 if (EntityManager.GetBuffer<BufferType>(e).Length != count)
                 {
                     inputDeps = new InitBufferJob

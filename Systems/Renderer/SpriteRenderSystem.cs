@@ -106,7 +106,7 @@ namespace DOTSSpriteRenderer.Systems.Renderer
 
             bufferStates.SyncBufferStates(sharedMats_);
 
-            Entities.ForEach((ref Rotation2D r) => { });
+            //Entities.ForEach((ref Rotation2D r) => { });
 
             foreach (var sharedMat in sharedMats_)
             {
